@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: placement
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://${PLACEMENT_DB_HOST:postgres-placement}:5432/${PLACEMENT_DB_NAME:placement}
+    username: ${PLACEMENT_DB_USER:placement}
+    password: ${PLACEMENT_DB_PASS:placement}
+    hikari:
+      maximum-pool-size: 10
+
+server:
+  port: ${PLACEMENT_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: placement
+
+placement:
+  replication-factor: ${REPLICATION_FACTOR:3}
+  cluster-map-path: ${CLUSTER_MAP_PATH:/app/cluster-map.yml}

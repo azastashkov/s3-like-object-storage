@@ -1,0 +1,4 @@
+nodes:
+  - { id: dn-1, host: data-node-1, port: 8085, rack: A }
+  - { id: dn-2, host: data-node-2, port: 8085, rack: B }
+  - { id: dn-3, host: data-node-3, port: 8085, rack: C }
