@@ -1,0 +1,12 @@
+rootProject.name = 's3-like-object-storage'
+
+include 'common-api'
+include 'common-core'
+include 'service-iam'
+include 'service-metadata'
+include 'service-placement'
+include 'service-data-node'
+include 'service-data-routing'
+include 'service-api'
+include 'service-gc'
+include 'client-loadtest'

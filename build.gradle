@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'io.spring.dependency-management' version "${springDependencyMgmtVersion}" apply false
+    id 'org.springframework.boot'        version "${springBootVersion}" apply false
+}
+
+allprojects {
+    group   = 'com.example.objectstorage'
+    version = '0.1.0'
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain { languageVersion = JavaLanguageVersion.of(Integer.parseInt(javaVersion)) }
+    }
+
+    repositories { mavenCentral() }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+        }
+    }
+
+    dependencies {
+        compileOnly             "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor     "org.projectlombok:lombok:${lombokVersion}"
+        testCompileOnly         "org.projectlombok:lombok:${lombokVersion}"
+        testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+        testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+        testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+        testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+        testImplementation 'org.assertj:assertj-core:3.26.3'
+
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') { useJUnitPlatform() }
+}

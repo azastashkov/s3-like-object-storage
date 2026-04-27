@@ -1,0 +1,19 @@
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    implementation project(':common-api')
+    implementation project(':common-core')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    implementation "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}"
+
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+springBoot {
+    mainClass = 'com.example.objectstorage.api.ApiApplication'
+}
