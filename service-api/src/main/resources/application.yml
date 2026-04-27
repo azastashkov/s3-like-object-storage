@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: api
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 100MB
+  jackson:
+    default-property-inclusion: NON_NULL
+
+server:
+  port: ${API_PORT:8080}
+  tomcat:
+    max-swallow-size: -1
+    max-http-form-post-size: -1
+  max-http-request-header-size: 32KB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: api
+
+api:
+  jwt:
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me-change-me-change-me}
+    issuer: iam
+  iam-base-urls:        ${IAM_BASE_URLS:http://iam-1:8081,http://iam-2:8081}
+  metadata-base-urls:   ${METADATA_BASE_URLS:http://metadata-1:8082,http://metadata-2:8082}
+  placement-base-urls:  ${PLACEMENT_BASE_URLS:http://placement-1:8083,http://placement-2:8083}
+  data-routing-base-urls: ${DATA_ROUTING_BASE_URLS:http://data-routing-1:8084,http://data-routing-2:8084}
+  acl-cache-ttl-seconds: 60
