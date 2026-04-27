@@ -12,6 +12,9 @@ dependencies {
     implementation "io.micrometer:micrometer-core:${micrometerVersion}"
     implementation "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}"
 
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'ch.qos.logback:logback-classic:1.5.12'
+
     implementation "info.picocli:picocli:${picocliVersion}"
     annotationProcessor "info.picocli:picocli-codegen:${picocliVersion}"
 }
