@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: metadata
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${METADATA_PORT:8082}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: metadata
+
+metadata:
+  shard-count: 4
+  global:
+    url: jdbc:postgresql://${META_GLOBAL_HOST:postgres-meta-global}:5432/${META_GLOBAL_DB:metaglobal}
+    username: ${META_USER:meta}
+    password: ${META_PASS:meta}
+  shards:
+    - url: jdbc:postgresql://${META_SHARD_0_HOST:postgres-meta-0}:5432/${META_SHARD_DB:metashard}
+      username: ${META_USER:meta}
+      password: ${META_PASS:meta}
+    - url: jdbc:postgresql://${META_SHARD_1_HOST:postgres-meta-1}:5432/${META_SHARD_DB:metashard}
+      username: ${META_USER:meta}
+      password: ${META_PASS:meta}
+    - url: jdbc:postgresql://${META_SHARD_2_HOST:postgres-meta-2}:5432/${META_SHARD_DB:metashard}
+      username: ${META_USER:meta}
+      password: ${META_PASS:meta}
+    - url: jdbc:postgresql://${META_SHARD_3_HOST:postgres-meta-3}:5432/${META_SHARD_DB:metashard}
+      username: ${META_USER:meta}
+      password: ${META_PASS:meta}
