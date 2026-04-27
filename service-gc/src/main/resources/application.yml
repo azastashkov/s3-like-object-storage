@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: gc
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${GC_PORT:8086}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: gc
+
+gc:
+  placement-base-urls:    ${PLACEMENT_BASE_URLS:http://placement-1:8083,http://placement-2:8083}
+  data-routing-base-urls: ${DATA_ROUTING_BASE_URLS:http://data-routing-1:8084,http://data-routing-2:8084}
+  tombstone-interval-ms:    ${TOMBSTONE_INTERVAL_MS:600000}
+  compaction-interval-ms:   ${COMPACTION_INTERVAL_MS:3600000}
+  rereplication-interval-ms: ${REREPLICATION_INTERVAL_MS:3600000}
+  tombstone-age-seconds:    ${TOMBSTONE_AGE_SECONDS:60}
