@@ -8,6 +8,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -45,15 +46,14 @@ public class TombstoneReclaimer {
     public int doReclaim() {
         try {
             String base = placement.nextBaseUrl();
-            @SuppressWarnings("unchecked")
-            List<PlacementDecision> tombstoned = (List<PlacementDecision>) placement.client().get()
+            List<PlacementDecision> tombstoned = placement.client().get()
                     .uri(base + "/placements?state=TOMBSTONED&olderThanSeconds=" + props.tombstoneAgeSeconds() + "&limit=1000")
                     .retrieve()
-                    .body(List.class);
+                    .body(new ParameterizedTypeReference<List<PlacementDecision>>() {});
             if (tombstoned == null) return 0;
 
             int count = 0;
-            for (var raw : tombstoned) {
+            for (PlacementDecision raw : tombstoned) {
                 UUID id = raw.objectId();
                 try {
                     String routingBase = routing.nextBaseUrl();

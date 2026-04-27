@@ -57,8 +57,10 @@ public class ObjectService {
         this.putCounter = meters.counter("api.objects", "op", "put");
         this.getCounter = meters.counter("api.objects", "op", "get");
         this.deleteCounter = meters.counter("api.objects", "op", "delete");
-        this.putTimer = meters.timer("api.objects.duration", "op", "put");
-        this.getTimer = meters.timer("api.objects.duration", "op", "get");
+        this.putTimer = Timer.builder("api.objects.duration")
+                .tag("op", "put").publishPercentileHistogram().register(meters);
+        this.getTimer = Timer.builder("api.objects.duration")
+                .tag("op", "get").publishPercentileHistogram().register(meters);
         meters.gauge("api.bytes.in", bytesIn);
         meters.gauge("api.bytes.out", bytesOut);
     }

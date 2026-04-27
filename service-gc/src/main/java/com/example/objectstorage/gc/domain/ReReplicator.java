@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -58,15 +59,14 @@ public class ReReplicator {
             for (DataNode n : map.nodes()) byId.put(n.id(), n);
 
             String placementBase = placement.nextBaseUrl();
-            @SuppressWarnings("unchecked")
-            List<PlacementDecision> active = (List<PlacementDecision>) placement.client().get()
+            List<PlacementDecision> active = placement.client().get()
                     .uri(placementBase + "/placements/active?limit=500")
                     .retrieve()
-                    .body(List.class);
+                    .body(new ParameterizedTypeReference<List<PlacementDecision>>() {});
             if (active == null) return 0;
 
             int total = 0;
-            for (var raw : active) {
+            for (PlacementDecision raw : active) {
                 String missingNode = null;
                 String healthyNode = null;
                 for (String nodeId : raw.replicaNodes()) {
