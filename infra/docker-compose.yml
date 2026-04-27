@@ -1,0 +1,456 @@
+name: s3lite
+
+services:
+
+  # ============================ DATABASES ============================
+
+  postgres-iam:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: iam
+      POSTGRES_PASSWORD: iam
+      POSTGRES_DB: iam
+    volumes:
+      - ./sql/01-iam.sql:/docker-entrypoint-initdb.d/01-iam.sql:ro
+      - pg-iam:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam -d iam"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  postgres-placement:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: placement
+      POSTGRES_PASSWORD: placement
+      POSTGRES_DB: placement
+    volumes:
+      - ./sql/02-placement.sql:/docker-entrypoint-initdb.d/02-placement.sql:ro
+      - pg-placement:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U placement -d placement"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  postgres-meta-global:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: meta
+      POSTGRES_PASSWORD: meta
+      POSTGRES_DB: metaglobal
+    volumes:
+      - ./sql/03-meta-global.sql:/docker-entrypoint-initdb.d/03-meta-global.sql:ro
+      - pg-meta-global:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meta -d metaglobal"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  postgres-meta-0:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: meta
+      POSTGRES_PASSWORD: meta
+      POSTGRES_DB: metashard
+    volumes:
+      - ./sql/04-meta-shard.sql:/docker-entrypoint-initdb.d/04-meta-shard.sql:ro
+      - pg-meta-0:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meta -d metashard"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  postgres-meta-1:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: meta
+      POSTGRES_PASSWORD: meta
+      POSTGRES_DB: metashard
+    volumes:
+      - ./sql/04-meta-shard.sql:/docker-entrypoint-initdb.d/04-meta-shard.sql:ro
+      - pg-meta-1:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meta -d metashard"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  postgres-meta-2:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: meta
+      POSTGRES_PASSWORD: meta
+      POSTGRES_DB: metashard
+    volumes:
+      - ./sql/04-meta-shard.sql:/docker-entrypoint-initdb.d/04-meta-shard.sql:ro
+      - pg-meta-2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meta -d metashard"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  postgres-meta-3:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: meta
+      POSTGRES_PASSWORD: meta
+      POSTGRES_DB: metashard
+    volumes:
+      - ./sql/04-meta-shard.sql:/docker-entrypoint-initdb.d/04-meta-shard.sql:ro
+      - pg-meta-3:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meta -d metashard"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # ============================ IAM (x2) ============================
+
+  iam-1:
+    build:
+      context: ..
+      dockerfile: service-iam/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?must set JWT_SECRET (>= 32 chars)}
+      IAM_DB_HOST: postgres-iam
+      SPRING_APPLICATION_NAME: iam
+    depends_on:
+      postgres-iam:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  iam-2:
+    build:
+      context: ..
+      dockerfile: service-iam/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?must set JWT_SECRET (>= 32 chars)}
+      IAM_DB_HOST: postgres-iam
+      SPRING_APPLICATION_NAME: iam
+    depends_on:
+      postgres-iam:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  # ============================ METADATA (x2) ============================
+
+  metadata-1:
+    build:
+      context: ..
+      dockerfile: service-metadata/Dockerfile
+    environment:
+      META_GLOBAL_HOST: postgres-meta-global
+      META_SHARD_0_HOST: postgres-meta-0
+      META_SHARD_1_HOST: postgres-meta-1
+      META_SHARD_2_HOST: postgres-meta-2
+      META_SHARD_3_HOST: postgres-meta-3
+    depends_on:
+      postgres-meta-global:
+        condition: service_healthy
+      postgres-meta-0:
+        condition: service_healthy
+      postgres-meta-1:
+        condition: service_healthy
+      postgres-meta-2:
+        condition: service_healthy
+      postgres-meta-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  metadata-2:
+    build:
+      context: ..
+      dockerfile: service-metadata/Dockerfile
+    environment:
+      META_GLOBAL_HOST: postgres-meta-global
+      META_SHARD_0_HOST: postgres-meta-0
+      META_SHARD_1_HOST: postgres-meta-1
+      META_SHARD_2_HOST: postgres-meta-2
+      META_SHARD_3_HOST: postgres-meta-3
+    depends_on:
+      postgres-meta-global:
+        condition: service_healthy
+      postgres-meta-0:
+        condition: service_healthy
+      postgres-meta-1:
+        condition: service_healthy
+      postgres-meta-2:
+        condition: service_healthy
+      postgres-meta-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  # ============================ PLACEMENT (x2) ============================
+
+  placement-1:
+    build:
+      context: ..
+      dockerfile: service-placement/Dockerfile
+    environment:
+      PLACEMENT_DB_HOST: postgres-placement
+      CLUSTER_MAP_PATH: /app/cluster-map.yml
+    volumes:
+      - ./cluster-map.yml:/app/cluster-map.yml:ro
+    depends_on:
+      postgres-placement:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  placement-2:
+    build:
+      context: ..
+      dockerfile: service-placement/Dockerfile
+    environment:
+      PLACEMENT_DB_HOST: postgres-placement
+      CLUSTER_MAP_PATH: /app/cluster-map.yml
+    volumes:
+      - ./cluster-map.yml:/app/cluster-map.yml:ro
+    depends_on:
+      postgres-placement:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  # ============================ DATA NODES (x3) ============================
+
+  data-node-1:
+    build:
+      context: ..
+      dockerfile: service-data-node/Dockerfile
+    environment:
+      NODE_ID: dn-1
+      RACK: A
+      DATA_DIR: /data
+    volumes:
+      - dn-1:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  data-node-2:
+    build:
+      context: ..
+      dockerfile: service-data-node/Dockerfile
+    environment:
+      NODE_ID: dn-2
+      RACK: B
+      DATA_DIR: /data
+    volumes:
+      - dn-2:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  data-node-3:
+    build:
+      context: ..
+      dockerfile: service-data-node/Dockerfile
+    environment:
+      NODE_ID: dn-3
+      RACK: C
+      DATA_DIR: /data
+    volumes:
+      - dn-3:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  # ============================ DATA ROUTING (x2) ============================
+
+  data-routing-1:
+    build:
+      context: ..
+      dockerfile: service-data-routing/Dockerfile
+    depends_on:
+      placement-1:
+        condition: service_healthy
+      data-node-1:
+        condition: service_healthy
+      data-node-2:
+        condition: service_healthy
+      data-node-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  data-routing-2:
+    build:
+      context: ..
+      dockerfile: service-data-routing/Dockerfile
+    depends_on:
+      placement-1:
+        condition: service_healthy
+      data-node-1:
+        condition: service_healthy
+      data-node-2:
+        condition: service_healthy
+      data-node-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  # ============================ API (x2) ============================
+
+  api-1:
+    build:
+      context: ..
+      dockerfile: service-api/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?must set JWT_SECRET (>= 32 chars)}
+    depends_on:
+      iam-1:
+        condition: service_healthy
+      metadata-1:
+        condition: service_healthy
+      placement-1:
+        condition: service_healthy
+      data-routing-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  api-2:
+    build:
+      context: ..
+      dockerfile: service-api/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?must set JWT_SECRET (>= 32 chars)}
+    depends_on:
+      iam-1:
+        condition: service_healthy
+      metadata-1:
+        condition: service_healthy
+      placement-1:
+        condition: service_healthy
+      data-routing-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  # ============================ NGINX LOAD BALANCER ============================
+
+  nginx-lb:
+    build:
+      context: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      api-1:
+        condition: service_healthy
+      api-2:
+        condition: service_healthy
+
+  # ============================ GC ============================
+
+  gc:
+    build:
+      context: ..
+      dockerfile: service-gc/Dockerfile
+    depends_on:
+      placement-1:
+        condition: service_healthy
+      data-routing-1:
+        condition: service_healthy
+
+  # ============================ MONITORING ============================
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  # ============================ LOAD CLIENT (test profile) ============================
+
+  load-client:
+    build:
+      context: ..
+      dockerfile: client-loadtest/Dockerfile
+    profiles: ["test"]
+    environment:
+      API_BASE: http://nginx-lb:80
+      IAM_BASE: http://iam-1:8081
+      LOAD_PRINCIPAL: loadtest
+      LOAD_SECRET: loadtest-secret-key
+      LOAD_DURATION_SEC: ${LOAD_DURATION_SEC:-120}
+      LOAD_THREADS: ${LOAD_THREADS:-32}
+    depends_on:
+      nginx-lb:
+        condition: service_started
+
+volumes:
+  pg-iam:
+  pg-placement:
+  pg-meta-global:
+  pg-meta-0:
+  pg-meta-1:
+  pg-meta-2:
+  pg-meta-3:
+  dn-1:
+  dn-2:
+  dn-3:
+  prom-data:
+  grafana-data:
