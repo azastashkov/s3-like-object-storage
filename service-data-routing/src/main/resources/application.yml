@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: data-routing
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 100MB
+
+server:
+  port: ${ROUTING_PORT:8084}
+  tomcat:
+    max-swallow-size: -1
+    max-http-form-post-size: -1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: data-routing
+
+routing:
+  placement-base-urls: ${PLACEMENT_BASE_URLS:http://placement-1:8083,http://placement-2:8083}
+  write-quorum: ${WRITE_QUORUM:2}
+  read-timeout-ms: ${READ_TIMEOUT_MS:30000}
+  write-timeout-ms: ${WRITE_TIMEOUT_MS:60000}
+  cluster-cache-ttl-seconds: 60
