@@ -11,7 +11,6 @@ import com.example.objectstorage.api.MultipartUpload;
 import com.example.objectstorage.api.MultipartUploadDetail;
 import com.example.objectstorage.api.ObjectVersionRow;
 import com.example.objectstorage.core.http.RoundRobinClient;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
 
