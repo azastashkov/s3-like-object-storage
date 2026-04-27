@@ -1,10 +1,5 @@
-FROM eclipse-temurin:21-jdk AS build
-WORKDIR /src
-COPY . .
-RUN ./gradlew :service-api:bootJar -x test --no-daemon
-
 FROM eclipse-temurin:21-jre
 RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
-COPY --from=build /src/service-api/build/libs/*.jar /app/app.jar
+COPY service-api/build/libs/service-api-*.jar /app/app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-Xmx768m","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-Xmx1g","-jar","/app/app.jar"]

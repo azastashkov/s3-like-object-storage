@@ -5,6 +5,7 @@ out/
 .idea/
 *.iml
 .DS_Store
+.claude/
 infra/data/
 infra/grafana/data/
 .env

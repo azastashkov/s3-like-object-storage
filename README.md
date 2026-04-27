@@ -38,12 +38,14 @@ prometheus ──(scrape)──▶ all services       grafana ──▶ promethe
 
 ## Quick Start
 
-Prerequisites: Docker (with Compose v2) and `openssl` (or any way to generate a strong secret).
+Prerequisites: Docker (with Compose v2), JDK 21, and `openssl` (or any way to generate a strong secret).
+
+The Java jars are built on the host first, then each Docker image just copies the jar and runs it on a JRE base image. This avoids running 15 concurrent Gradle JVMs inside Docker (which OOMs on most laptops).
 
 ```bash
-cd infra
 export JWT_SECRET=$(openssl rand -base64 48)
-docker compose up -d --build
+./infra/build.sh                 # gradle assemble + docker compose build
+cd infra && docker compose up -d
 ```
 
 Wait ~60–90 seconds for everything to become healthy:
@@ -89,7 +91,7 @@ curl -s 'http://localhost:8080/photos?list-type=2' -H "Authorization: Bearer $TO
 docker compose --profile test up load-client
 ```
 
-This runs a 32-thread mixed workload (50% PUT, 30% GET, 5% multipart, 15% DELETE) for 120 seconds (configurable via env). On shutdown, the client prints a summary with throughput and p99 latencies. Final metrics scrape into Prometheus before the container exits.
+This runs a 24-thread mixed workload (50% PUT, 30% GET, 5% multipart, 15% DELETE) for 120 seconds (configurable via env). On shutdown, the client prints a summary with throughput and mean/max latencies. Final metrics scrape into Prometheus before the container exits.
 
 Adjust via env:
 
