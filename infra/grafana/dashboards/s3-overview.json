@@ -1,0 +1,140 @@
+{
+  "id": null,
+  "uid": "s3-overview",
+  "title": "S3-Like Object Storage — Overview",
+  "tags": ["s3", "object-storage"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "API Request Rate (req/s)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(rate(api_objects_total[1m]))", "refId": "A" }],
+      "options": { "graphMode": "area", "colorMode": "value" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "API Auth Failures (last 1m)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(increase(api_auth_failures_total[1m]))", "refId": "A" }],
+      "options": { "colorMode": "value" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "CRC Mismatches (total)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(datanode_chunks_crc_mismatch_total) + sum(routing_read_crc_mismatch_total)", "refId": "A" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Quorum Write Failures (last 5m)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(increase(routing_write_quorum_total{result=\"fail\"}[5m]))", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "API Object Operations by Type",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum by (op) (rate(api_objects_total[1m]))", "legendFormat": "{{op}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "API Operation Duration p99",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, op) (rate(api_objects_duration_seconds_bucket[1m])))",
+          "legendFormat": "p99 {{op}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Bytes In / Out (per second)",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum(rate(api_bytes_in[1m]))",  "legendFormat": "in",  "refId": "A" },
+        { "expr": "sum(rate(api_bytes_out[1m]))", "legendFormat": "out", "refId": "B" }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Quorum Write Duration p99",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(routing_write_duration_seconds_bucket[1m])))",
+          "legendFormat": "p99",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Data Node Bytes Written (per node)",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (node) (rate(datanode_chunks_bytes_written[1m]))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Data Node Bytes Read (per node)",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (node) (rate(datanode_chunks_bytes_read[1m]))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "GC: Reclaimed / Compacted / Repaired",
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum(rate(gc_tombstone_reclaimed_total[5m]))",  "legendFormat": "tombstones",      "refId": "A" },
+        { "expr": "sum(rate(gc_compaction_chunks_total[5m]))",   "legendFormat": "chunks compacted", "refId": "B" },
+        { "expr": "sum(rate(gc_rereplication_repaired_total[5m]))", "legendFormat": "re-replicated", "refId": "C" }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "JVM Heap Used by Service",
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (application) (jvm_memory_used_bytes{area=\"heap\"})",
+          "legendFormat": "{{application}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['api-1:8080', 'api-2:8080']
+
+  - job_name: iam
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['iam-1:8081', 'iam-2:8081']
+
+  - job_name: metadata
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['metadata-1:8082', 'metadata-2:8082']
+
+  - job_name: placement
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['placement-1:8083', 'placement-2:8083']
+
+  - job_name: data-routing
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['data-routing-1:8084', 'data-routing-2:8084']
+
+  - job_name: data-node
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['data-node-1:8085', 'data-node-2:8085', 'data-node-3:8085']
+
+  - job_name: gc
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['gc:8086']
+
+  - job_name: load-client
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['load-client:8087']
