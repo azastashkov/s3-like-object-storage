@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: data-node
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 100MB
+
+server:
+  port: ${DATANODE_PORT:8085}
+  tomcat:
+    max-swallow-size: -1
+    max-http-form-post-size: -1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: data-node
+      node: ${NODE_ID:dn-local}
+
+datanode:
+  id: ${NODE_ID:dn-local}
+  rack: ${RACK:A}
+  data-dir: ${DATA_DIR:/data}
+  chunk-size-bytes: ${CHUNK_SIZE_BYTES:1073741824}
+  compaction-deleted-ratio: ${COMPACTION_DELETED_RATIO:0.4}
