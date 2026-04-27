@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: iam
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://${IAM_DB_HOST:postgres-iam}:${IAM_DB_PORT:5432}/${IAM_DB_NAME:iam}
+    username: ${IAM_DB_USER:iam}
+    password: ${IAM_DB_PASS:iam}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+server:
+  port: ${IAM_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: iam
+
+iam:
+  jwt:
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me-change-me-change-me}
+    ttl-minutes: ${JWT_TTL_MINUTES:10}
+    issuer: iam
