@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -96,7 +95,7 @@ public class LoadTestMain implements Runnable {
         Timer delT = Timer.builder("loadtest.duration").tag("op", "delete").publishPercentileHistogram().register(registry);
         Timer mpT  = Timer.builder("loadtest.duration").tag("op", "multipart").publishPercentileHistogram().register(registry);
 
-        ConcurrentLinkedQueue<String> uploadedKeys = new ConcurrentLinkedQueue<>();
+        java.util.concurrent.CopyOnWriteArrayList<String> uploadedKeys = new java.util.concurrent.CopyOnWriteArrayList<>();
         AtomicInteger uploadedCount = new AtomicInteger();
 
         ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
@@ -122,7 +121,7 @@ public class LoadTestMain implements Runnable {
                                 putOk.increment();
                                 uploadedKeys.add(key);
                             } else if (op < 80) {
-                                String key = pickOne(uploadedKeys);
+                                String key = pickRandom(uploadedKeys, rnd);
                                 if (key == null) continue;
                                 long s = System.nanoTime();
                                 getObject(http, token, bucket, key);
@@ -136,7 +135,7 @@ public class LoadTestMain implements Runnable {
                                 mpOk.increment();
                                 uploadedKeys.add(key);
                             } else {
-                                String key = pickOne(uploadedKeys);
+                                String key = pickRandomAndRemove(uploadedKeys, rnd);
                                 if (key == null) continue;
                                 long s = System.nanoTime();
                                 deleteObject(http, token, bucket, key);
@@ -181,9 +180,10 @@ public class LoadTestMain implements Runnable {
         log.info("GET ok={}  err={}", (long) getOk.count(), (long) getErr.count());
         log.info("MP  ok={}  err={}", (long) mpOk.count(), (long) mpErr.count());
         log.info("DEL ok={}  err={}", (long) delOk.count(), (long) delErr.count());
-        log.info("PUT p99 = {} ms", String.format("%.1f", putT.percentile(0.99, TimeUnit.MILLISECONDS)));
-        log.info("GET p99 = {} ms", String.format("%.1f", getT.percentile(0.99, TimeUnit.MILLISECONDS)));
-        log.info("MP  p99 = {} ms", String.format("%.1f", mpT.percentile(0.99, TimeUnit.MILLISECONDS)));
+        log.info("PUT mean={} ms max={} ms", fmtMs(putT.mean(TimeUnit.MILLISECONDS)), fmtMs(putT.max(TimeUnit.MILLISECONDS)));
+        log.info("GET mean={} ms max={} ms", fmtMs(getT.mean(TimeUnit.MILLISECONDS)), fmtMs(getT.max(TimeUnit.MILLISECONDS)));
+        log.info("MP  mean={} ms max={} ms", fmtMs(mpT.mean(TimeUnit.MILLISECONDS)), fmtMs(mpT.max(TimeUnit.MILLISECONDS)));
+        log.info("DEL mean={} ms max={} ms", fmtMs(delT.mean(TimeUnit.MILLISECONDS)), fmtMs(delT.max(TimeUnit.MILLISECONDS)));
 
         // Keep metrics server alive for a bit so Prometheus can scrape final state
         try { Thread.sleep(15_000); } catch (InterruptedException ignored) {}
@@ -290,9 +290,31 @@ public class LoadTestMain implements Runnable {
                 .toBodilessEntity();
     }
 
-    private static String pickOne(ConcurrentLinkedQueue<String> q) {
-        if (q.isEmpty()) return null;
-        return q.peek();
+    private static String fmtMs(double v) {
+        return Double.isFinite(v) ? String.format("%.1f", v) : "n/a";
+    }
+
+    private static String pickRandom(java.util.concurrent.CopyOnWriteArrayList<String> list,
+                                      ThreadLocalRandom rnd) {
+        int sz = list.size();
+        if (sz == 0) return null;
+        try {
+            return list.get(rnd.nextInt(sz));
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+    }
+
+    private static String pickRandomAndRemove(java.util.concurrent.CopyOnWriteArrayList<String> list,
+                                                ThreadLocalRandom rnd) {
+        int sz = list.size();
+        if (sz == 0) return null;
+        try {
+            int idx = rnd.nextInt(sz);
+            return list.remove(idx);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     private void startMetricsServer(PrometheusMeterRegistry registry) {
